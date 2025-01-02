@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | SpaceBattleTowardsTheAbyss</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+
+    <script>
+        document.addEventListener("touchstart", function(event) {
+            event.preventDefault();
+        }, {passive: false});
+    </script>
+
+    <style>
+        canvas:focus {
+            outline: none;
+        }
+
+        html, body {
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            height: 100%;
+        }
+
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        #unity-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #unity-loading-bar {
+            position: absolute;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div id="background"></div>
+    <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+        </div>
+    </div>
+    <div id="unity-container" style="position: absolute; width: 100%; height: 100%; left: 0%; top: 0%;">
+        <canvas id="unity-canvas" style="width: 100%; height: 100%; background:#231F20;"></canvas>
+        <div id="unity-warning"></div>
+        <div id="unity-build-title">SpaceBattleTowardsTheAbyss</div>
+        <style>
+            #unity-build-title {
+                display: none;
+            }
+        </style>
+    </div>
+    <script>
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var warningBanner = document.querySelector("#unity-warning");
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        function unityShowBanner(msg, type) {
+            function updateBannerVisibility() {
+                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+            }
+            var div = document.createElement('div');
+            div.innerHTML = msg;
+            warningBanner.appendChild(div);
+            if (type == 'error') div.style = 'background: red; padding: 10px;';
+            else {
+                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+                setTimeout(function() {
+                    warningBanner.removeChild(div);
+                    updateBannerVisibility();
+                }, 5000);
+            }
+            updateBannerVisibility();
+        }
+
+        var buildUrl = "Build";
+        var loaderUrl = buildUrl + "/SpaceBattleTowardsTheAbyss.loader.js";
+        var config = {
+            dataUrl: buildUrl + "/SpaceBattleTowardsTheAbyss.data.unityweb",
+            frameworkUrl: buildUrl + "/SpaceBattleTowardsTheAbyss.framework.js.unityweb",
+            codeUrl: buildUrl + "/SpaceBattleTowardsTheAbyss.wasm.unityweb",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "tpknkrll1848",
+            productName: "SpaceBattleTowardsTheAbyss",
+            productVersion: "1.0.0.0",
+            showBanner: unityShowBanner,
+        };
+
+        function lock(object, aspectRatio) {
+            var scaleFactor;
+            if (window.innerWidth / window.innerHeight > aspectRatio) {
+                object.style.width = window.innerHeight * aspectRatio + "px";
+                object.style.height = "100%";
+                scaleFactor = window.innerHeight * aspectRatio / 21;
+            } else {
+                object.style.width = "100%";
+                object.style.height = window.innerWidth / aspectRatio + "px";
+                scaleFactor = window.innerWidth / aspectRatio / 34;
+            }
+
+            object.style.margin = "auto";
+            object.style.top = "0";
+            object.style.left = "0";
+            object.style.bottom = "0";
+            object.style.right = "0";
+        }
+
+        function Update() {
+            var content = document.getElementById('unity-canvas');
+            lock(content, 16 / 9); 
+        }
+
+        window.onload = Update;
+        window.onresize = Update;
+
+        loadingBar.style.display = "block";
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                progressBarFull.style.width = 100 * progress + "%";
+            }).then((unityInstance) => {
+                loadingBar.style.display = "none";
+                var temp = document.getElementById('background');
+                document.getElementById('unity-container').style.zIndex = '1';
+                temp.style.zIndex = '0';
+                document.body.insertBefore(temp, document.body.firstChild);
+            }).catch((message) => {
+                alert(message);
+            });
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
